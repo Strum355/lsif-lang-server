@@ -1,22 +1,29 @@
+use serde::{Deserialize, Serialize};
+
 use lsp_types::Url;
 use lsp_types::MarkedString;
 use lsp_types::Position;
 
+#[derive(Serialize, Deserialize)]
 pub struct Element {
     pub id: u64,
     pub el_type: ElementType
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum ElementType {
     Vertex,
     Edge
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Vertex {
+    #[serde(flatten)]
     pub el: Element,
     pub label: VertexLabel
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum VertexLabel {
     Metadata,
     Project,
@@ -37,11 +44,14 @@ pub enum VertexLabel {
     ImplementationResult
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Edge {
+    #[serde(flatten)]
     pub el: Element,
     pub label: EdgeLabel
 }
 
+#[derive(Serialize, Deserialize)]
 pub enum EdgeLabel {
     Contains,
     Item,
@@ -61,7 +71,9 @@ pub enum EdgeLabel {
     TextDocImplementation
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Contains {
+    #[serde(flatten)]
     pub edge: Edge,
     pub out_v: u64,
     pub in_vs: Vec<u64>
@@ -81,7 +93,9 @@ impl Contains {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct DefinitionResult {
+    #[serde(flatten)]
     pub vertex: Vertex
 }
 
@@ -98,7 +112,9 @@ impl DefinitionResult {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct TextDocumentDefinition {
+    #[serde(flatten)]
     pub edge: Edge,
     pub out_v: u64,
     pub in_v: u64
@@ -118,7 +134,9 @@ impl TextDocumentDefinition {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Document {
+    #[serde(flatten)]
     pub vertex: Vertex,
     pub uri: Url,
     pub language_id: String
@@ -139,11 +157,14 @@ impl Document {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct HoverResult {
+    #[serde(flatten)]
     pub vertex: Vertex,
     pub result: HoverResultContent
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct HoverResultContent {
     pub contents: Vec<MarkedString>
 }
@@ -164,7 +185,9 @@ impl HoverResult {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct TextDocumentHover {
+    #[serde(flatten)]
     pub edge: Edge,
     pub out_v: u64,
     pub in_v: u64
@@ -184,7 +207,9 @@ impl TextDocumentHover {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Item {
+    #[serde(flatten)]
     pub edge: Edge,
     pub out_v: u64,
     pub in_vs: Vec<u64>,
@@ -221,7 +246,9 @@ impl Item {
 const VERSION: &'static str = "0.4.3";
 const POSITION_ENCODING: &'static str = "utf-16";
 
+#[derive(Serialize, Deserialize)]
 pub struct MetaData {
+    #[serde(flatten)]
     pub vertex: Vertex,
     pub version: &'static str,
     pub project_root: String,
@@ -229,6 +256,7 @@ pub struct MetaData {
     pub tool_info: ToolInfo
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct ToolInfo {
     pub name: String,
     pub version: &'static str,
@@ -252,7 +280,9 @@ impl MetaData {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Moniker {
+    #[serde(flatten)]
     pub vertex: Vertex,
     pub kind: String,
     pub scheme: String,
@@ -275,7 +305,9 @@ impl Moniker {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct MonikerEdge {
+    #[serde(flatten)]
     pub edge: Edge,
     pub out_v: u64, 
     pub in_v: u64
@@ -295,7 +327,9 @@ impl MonikerEdge {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct NextMonikerEdge {
+    #[serde(flatten)]
     pub edge: Edge,
     pub out_v: u64,
     pub in_v: u64
@@ -315,7 +349,9 @@ impl NextMonikerEdge {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Next {
+    #[serde(flatten)]
     pub edge: Edge,
     pub out_v: u64, 
     pub in_v: u64
@@ -335,7 +371,9 @@ impl Next {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct PackageInfo {
+    #[serde(flatten)]
     pub vertex: Vertex,
     pub name: String,
     pub manager: String,
@@ -358,7 +396,9 @@ impl PackageInfo {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct PackageInfoEdge {
+    #[serde(flatten)]
     pub edge: Edge,
     pub out_v: u64,
     pub in_v: u64
@@ -378,7 +418,9 @@ impl PackageInfoEdge {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct Project {
+    #[serde(flatten)]
     pub vertex: Vertex,
     pub kind: String
 }
@@ -397,8 +439,9 @@ impl Project {
     }
 }
 
-
+#[derive(Serialize, Deserialize)]
 pub struct Range {
+    #[serde(flatten)]
     pub vertex: Vertex,
     pub start: Position,
     pub end: Position
@@ -418,7 +461,9 @@ impl Range {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct ResultSet {
+    #[serde(flatten)]
     pub vertex: Vertex
 }
 
@@ -446,7 +491,9 @@ impl ResultSet {
     }
 }
 
+#[derive(Serialize, Deserialize)]
 pub struct TextDocumentReferences {
+    #[serde(flatten)]
     pub edge: Edge,
     pub out_v: u64,
     pub in_v: u64
