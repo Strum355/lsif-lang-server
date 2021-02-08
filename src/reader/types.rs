@@ -15,7 +15,7 @@ pub type Result<T> = result::Result<T, ProtocolError>;
 pub enum ProtocolError {
     IDParse(#[from] ParseIntError),
     JSONParse(String),
-    Other(String)
+    Other(String),
 }
 
 impl Display for ProtocolError {
@@ -41,7 +41,7 @@ pub struct Element {
     pub id: u64,
     pub el_type: String,
     pub label: String,
-    pub payload: Option<Payload>
+    pub payload: Option<Payload>,
 }
 
 #[derive(Clone)]
@@ -53,7 +53,7 @@ pub enum Payload {
     ResultSet(ResultSet),
     Moniker(Moniker),
     PackageInformation(PackageInformation),
-    Diagnostics(Vec<Diagnostic>)
+    Diagnostics(Vec<Diagnostic>),
 }
 
 #[derive(Clone)]
@@ -61,13 +61,13 @@ pub struct Edge {
     pub out_v: u64,
     pub in_v: u64,
     pub in_vs: Vec<u64>,
-    pub document: u64
+    pub document: u64,
 }
 
 #[derive(Clone)]
 pub struct MetaData {
     pub version: String,
-    pub project_root: String
+    pub project_root: String,
 }
 
 #[derive(Clone)]
@@ -75,23 +75,23 @@ pub struct Range {
     pub start_line: u32,
     pub start_character: u32,
     pub end_line: u32,
-    pub end_character: u32
+    pub end_character: u32,
 }
 
 #[derive(Clone)]
-pub struct ResultSet{}
+pub struct ResultSet {}
 
 #[derive(Clone)]
 pub struct Moniker {
     pub kind: String,
     pub scheme: String,
-    pub identifier: String
+    pub identifier: String,
 }
 
 #[derive(Clone)]
 pub struct PackageInformation {
     pub name: String,
-    pub version: String
+    pub version: String,
 }
 
 #[derive(Clone)]
@@ -103,5 +103,5 @@ pub struct Diagnostic {
     pub start_line: u64,
     pub start_character: u64,
     pub end_line: u64,
-    pub end_character: u64
+    pub end_character: u64,
 }

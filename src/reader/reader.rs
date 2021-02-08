@@ -1,9 +1,9 @@
-use super::types::*;
 use super::deserialize::deserialize_element;
 use super::interner::Interner;
+use super::types::*;
 
 use std::io::BufRead;
-use std::sync::{Arc, Mutex, RwLock, Condvar};
+use std::sync::{Arc, Condvar, Mutex, RwLock};
 
 use crossbeam_channel::{bounded, Receiver, Sender};
 
@@ -30,19 +30,26 @@ pub fn read_async(r: Box<dyn BufRead + Send>) -> Receiver<Result<Element>> {
     element_reciever
 }
 
-fn read_lines(interner: Interner, mut r: Box<dyn BufRead + Send>, element_sender: Sender<Result<Element>>) {
+fn read_lines(
+    interner: Interner,
+    mut r: Box<dyn BufRead + Send>,
+    element_sender: Sender<Result<Element>>,
+) {
     let (line_send, line_recv) = bounded::<(u64, Vec<u8>)>(*LINE_BUFFER_SIZE);
     let (results_send, results_recv) = bounded::<(u64, Result<Element>)>(*LINE_BUFFER_SIZE);
 
     let signal = Arc::new((Mutex::new(false), Condvar::new()));
 
-    let pool = ThreadPoolBuilder::new().num_threads(*WORKER_COUNT).build().unwrap();
+    let pool = ThreadPoolBuilder::new()
+        .num_threads(*WORKER_COUNT)
+        .build()
+        .unwrap();
 
     let reader_done = Arc::new(RwLock::new(false));
     let worker_done = Arc::new(RwLock::new(false));
 
-    {   
-        let reader_done = reader_done.clone(); 
+    {
+        let reader_done = reader_done.clone();
         // file reader thread
         std::thread::spawn(move || {
             let mut idx = 0 as u64;
@@ -67,8 +74,8 @@ fn read_lines(interner: Interner, mut r: Box<dyn BufRead + Send>, element_sender
             }
         });
     }
-    
-    {    
+
+    {
         let worker_done = worker_done.clone();
         let signal = signal.clone();
         std::thread::spawn(move || {
@@ -81,13 +88,13 @@ fn read_lines(interner: Interner, mut r: Box<dyn BufRead + Send>, element_sender
                         let interner = interner.clone();
                         let line_recv = line_recv.clone();
                         let results_send = results_send.clone();
-        
+
                         s.spawn(move |_| {
                             let (idx, line) = match line_recv.recv() {
                                 Ok(line_pair) => line_pair,
                                 Err(_) => return,
                             };
-        
+
                             let element = deserialize_element(&interner, &line);
                             println!("sending a result");
                             results_send.send((idx, element)).unwrap();
@@ -110,7 +117,7 @@ fn read_lines(interner: Interner, mut r: Box<dyn BufRead + Send>, element_sender
         });
     }
 
-    {    
+    {
         std::thread::spawn(move || {
             let mut elements = Vec::<Result<Element>>::with_capacity(*WORKER_COUNT);
 
@@ -125,7 +132,7 @@ fn read_lines(interner: Interner, mut r: Box<dyn BufRead + Send>, element_sender
                 for _ in 0..*WORKER_COUNT {
                     let el = match results_recv.recv() {
                         Ok(el) => el,
-                        Err(_) => return
+                        Err(_) => return,
                     };
 
                     println!("got a result");
@@ -175,6 +182,5 @@ mod test {
         }
 
         assert_eq!(count, 7);
-
     }
 }

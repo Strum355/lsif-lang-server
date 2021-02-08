@@ -1,7 +1,7 @@
-use serde_json::value::Value;
 use serde::{Deserialize, Serialize};
+use serde_json::value::Value;
 
-use lsp_types::{Url, Range as LSRange};
+use lsp_types::{Range as LSRange, Url};
 
 use super::interner::Interner;
 use super::types::*;
@@ -13,16 +13,21 @@ use std::collections::HashMap;
 type Deserializer = fn(&[u8]) -> Result<Payload>;
 
 lazy_static! {
-    static ref VERTEX_DESERIALIZERS: HashMap<&'static str, Deserializer> =
-        [
-            ("metaData", deserialize_metadata as Deserializer),
-            ("document", deserialize_document as Deserializer),
-            ("range", deserialize_range as Deserializer),
-            ("hoverResult", deserialize_hover as Deserializer),
-            ("moniker", deserialize_moniker as Deserializer),
-            ("packageInformation", deserialize_package_info as Deserializer),
-            ("diagnosticResult", deserialize_diagnostics as Deserializer)
-        ].iter().cloned().collect();
+    static ref VERTEX_DESERIALIZERS: HashMap<&'static str, Deserializer> = [
+        ("metaData", deserialize_metadata as Deserializer),
+        ("document", deserialize_document as Deserializer),
+        ("range", deserialize_range as Deserializer),
+        ("hoverResult", deserialize_hover as Deserializer),
+        ("moniker", deserialize_moniker as Deserializer),
+        (
+            "packageInformation",
+            deserialize_package_info as Deserializer
+        ),
+        ("diagnosticResult", deserialize_diagnostics as Deserializer)
+    ]
+    .iter()
+    .cloned()
+    .collect();
 }
 
 pub fn deserialize_element(interner: &Interner, line: &[u8]) -> Result<Element> {
@@ -32,7 +37,7 @@ pub fn deserialize_element(interner: &Interner, line: &[u8]) -> Result<Element> 
         id: Value,
         #[serde(rename = "type")]
         el_type: String,
-        label: String
+        label: String,
     }
 
     let payload: JSONPayload = serde_json::from_slice(line)?;
@@ -44,7 +49,7 @@ pub fn deserialize_element(interner: &Interner, line: &[u8]) -> Result<Element> 
         payload.id.as_u64().unwrap()
     };
 
-    let element = Element{
+    let element = Element {
         id,
         el_type: payload.el_type.clone(),
         label: payload.label.clone(),
@@ -52,7 +57,9 @@ pub fn deserialize_element(interner: &Interner, line: &[u8]) -> Result<Element> 
             Some(deserialize_edge(interner, line)?)
         } else if let Some(func) = VERTEX_DESERIALIZERS.get(payload.label.as_str()) {
             Some(func(line)?)
-        } else { None },
+        } else {
+            None
+        },
     };
 
     Ok(element)
@@ -68,7 +75,7 @@ fn deserialize_edge(interner: &Interner, line: &[u8]) -> Result<Payload> {
         #[serde(rename = "inVs")]
         in_vs: Option<Vec<Value>>,
         #[serde(rename = "document")]
-        document: Option<Value>
+        document: Option<Value>,
     }
 
     let payload: EdgePayload = serde_json::from_slice(line)?;
@@ -86,7 +93,9 @@ fn deserialize_edge(interner: &Interner, line: &[u8]) -> Result<Payload> {
             in_v.as_u64().unwrap()
         };
         in_v
-    } else { 0 as u64 };
+    } else {
+        0 as u64
+    };
 
     let document = if let Some(document) = payload.document {
         let document = if let Value::String(document) = document {
@@ -95,24 +104,33 @@ fn deserialize_edge(interner: &Interner, line: &[u8]) -> Result<Payload> {
             document.as_u64().unwrap()
         };
         document
-    } else { 0 as u64 };
+    } else {
+        0 as u64
+    };
 
     let in_vs = payload.in_vs.map_or_else(
         || Vec::new(),
         |in_vs| {
-            in_vs.iter().map(|v| {
-                let v = if let Value::String(v) = v {
-                    interner.intern(v.as_bytes()).unwrap()
-                } else {
-                    v.as_u64().unwrap()
-                };
-                v
-            }).collect::<Vec<u64>>()
-        }
+            in_vs
+                .iter()
+                .map(|v| {
+                    let v = if let Value::String(v) = v {
+                        interner.intern(v.as_bytes()).unwrap()
+                    } else {
+                        v.as_u64().unwrap()
+                    };
+                    v
+                })
+                .collect::<Vec<u64>>()
+        },
     );
 
-
-    Ok(Payload::Edge(Edge{out_v, in_v, in_vs, document}))
+    Ok(Payload::Edge(Edge {
+        out_v,
+        in_v,
+        in_vs,
+        document,
+    }))
 }
 
 fn deserialize_metadata(line: &[u8]) -> Result<Payload> {
@@ -120,12 +138,12 @@ fn deserialize_metadata(line: &[u8]) -> Result<Payload> {
     struct MetaPayload {
         version: String,
         #[serde(rename = "projectRoot")]
-        project_root: String
+        project_root: String,
     }
 
     let payload: MetaPayload = serde_json::from_slice(line)?;
 
-    Ok(Payload::MetaData(MetaData{
+    Ok(Payload::MetaData(MetaData {
         version: payload.version,
         project_root: payload.project_root,
     }))
@@ -134,7 +152,7 @@ fn deserialize_metadata(line: &[u8]) -> Result<Payload> {
 fn deserialize_document(line: &[u8]) -> Result<Payload> {
     #[derive(Deserialize, Serialize)]
     struct DocumentPayload {
-        uri: Url
+        uri: Url,
     }
 
     let payload: DocumentPayload = serde_json::from_slice(line)?;
@@ -145,7 +163,7 @@ fn deserialize_document(line: &[u8]) -> Result<Payload> {
 fn deserialize_range(line: &[u8]) -> Result<Payload> {
     let payload: LSRange = serde_json::from_slice(line)?;
 
-    Ok(Payload::Range(Range{
+    Ok(Payload::Range(Range {
         start_line: payload.start.line,
         start_character: payload.start.character,
         end_line: payload.end.line,
@@ -162,7 +180,7 @@ fn deserialize_moniker(line: &[u8]) -> Result<Payload> {
     struct MonikerPayload {
         kind: String,
         scheme: String,
-        identifier: String
+        identifier: String,
     }
 
     let mut payload: MonikerPayload = serde_json::from_slice(line)?;
@@ -171,11 +189,10 @@ fn deserialize_moniker(line: &[u8]) -> Result<Payload> {
         payload.scheme = "local".into()
     }
 
-    Ok(Payload::Moniker(Moniker{
+    Ok(Payload::Moniker(Moniker {
         kind: payload.kind,
         scheme: payload.scheme,
         identifier: payload.identifier,
-        
     }))
 }
 
@@ -188,7 +205,7 @@ fn deserialize_package_info(line: &[u8]) -> Result<Payload> {
 
     let payload: PackageInfoPayload = serde_json::from_slice(line)?;
 
-    Ok(Payload::PackageInformation(PackageInformation{
+    Ok(Payload::PackageInformation(PackageInformation {
         name: payload.name,
         version: payload.version,
     }))

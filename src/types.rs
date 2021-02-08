@@ -1,26 +1,26 @@
 use serde::{Deserialize, Serialize};
 
-use lsp_types::Url;
 use lsp_types::MarkedString;
 use lsp_types::Position;
+use lsp_types::Url;
 
 #[derive(Serialize, Deserialize)]
 pub struct Element {
     pub id: u64,
-    pub el_type: ElementType
+    pub el_type: ElementType,
 }
 
 #[derive(Serialize, Deserialize)]
 pub enum ElementType {
     Vertex,
-    Edge
+    Edge,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct Vertex {
     #[serde(flatten)]
     pub el: Element,
-    pub label: VertexLabel
+    pub label: VertexLabel,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -41,14 +41,14 @@ pub enum VertexLabel {
     TypeDefinitionResult,
     HoverResult,
     ReferenceResult,
-    ImplementationResult
+    ImplementationResult,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct Edge {
     #[serde(flatten)]
     pub el: Element,
-    pub label: EdgeLabel
+    pub label: EdgeLabel,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -68,7 +68,7 @@ pub enum EdgeLabel {
     TextDocTypeDefinition,
     TextDocHover,
     TextDocReferences,
-    TextDocImplementation
+    TextDocImplementation,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -76,19 +76,21 @@ pub struct Contains {
     #[serde(flatten)]
     pub edge: Edge,
     pub out_v: u64,
-    pub in_vs: Vec<u64>
+    pub in_vs: Vec<u64>,
 }
 
 impl Contains {
     pub fn new(id: u64, out_v: u64, in_vs: Vec<u64>) -> Contains {
-        Contains{
-            edge: Edge{
-                el: Element{
-                    id, el_type: ElementType::Edge
+        Contains {
+            edge: Edge {
+                el: Element {
+                    id,
+                    el_type: ElementType::Edge,
                 },
                 label: EdgeLabel::Contains,
             },
-            out_v, in_vs
+            out_v,
+            in_vs,
         }
     }
 }
@@ -96,18 +98,19 @@ impl Contains {
 #[derive(Serialize, Deserialize)]
 pub struct DefinitionResult {
     #[serde(flatten)]
-    pub vertex: Vertex
+    pub vertex: Vertex,
 }
 
 impl DefinitionResult {
     pub fn new(id: u64) -> DefinitionResult {
-        DefinitionResult{
-            vertex: Vertex{
-                el: Element{
-                    id, el_type: ElementType::Vertex
+        DefinitionResult {
+            vertex: Vertex {
+                el: Element {
+                    id,
+                    el_type: ElementType::Vertex,
                 },
                 label: VertexLabel::DefinitionResult,
-            }
+            },
         }
     }
 }
@@ -117,19 +120,21 @@ pub struct TextDocumentDefinition {
     #[serde(flatten)]
     pub edge: Edge,
     pub out_v: u64,
-    pub in_v: u64
+    pub in_v: u64,
 }
 
 impl TextDocumentDefinition {
     pub fn new(id: u64, out_v: u64, in_v: u64) -> TextDocumentDefinition {
-        TextDocumentDefinition{
-            edge: Edge{
-                el: Element{
-                    id, el_type: ElementType::Edge
+        TextDocumentDefinition {
+            edge: Edge {
+                el: Element {
+                    id,
+                    el_type: ElementType::Edge,
                 },
                 label: EdgeLabel::TextDocDefinition,
             },
-            out_v, in_v,
+            out_v,
+            in_v,
         }
     }
 }
@@ -139,15 +144,16 @@ pub struct Document {
     #[serde(flatten)]
     pub vertex: Vertex,
     pub uri: Url,
-    pub language_id: String
+    pub language_id: String,
 }
 
 impl Document {
     pub fn new(id: u64, language_id: &str, uri: &str) -> Document {
-        Document{
-            vertex: Vertex{
-                el: Element{
-                    id, el_type: ElementType::Vertex,
+        Document {
+            vertex: Vertex {
+                el: Element {
+                    id,
+                    el_type: ElementType::Vertex,
                 },
                 label: VertexLabel::Document,
             },
@@ -161,26 +167,25 @@ impl Document {
 pub struct HoverResult {
     #[serde(flatten)]
     pub vertex: Vertex,
-    pub result: HoverResultContent
+    pub result: HoverResultContent,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct HoverResultContent {
-    pub contents: Vec<MarkedString>
+    pub contents: Vec<MarkedString>,
 }
 
 impl HoverResult {
     pub fn new(id: u64, contents: Vec<MarkedString>) -> HoverResult {
-        HoverResult{
-            vertex: Vertex{
-                el: Element{
-                    id, el_type: ElementType::Vertex,
+        HoverResult {
+            vertex: Vertex {
+                el: Element {
+                    id,
+                    el_type: ElementType::Vertex,
                 },
                 label: VertexLabel::HoverResult,
             },
-            result: HoverResultContent{
-                contents,
-            },
+            result: HoverResultContent { contents },
         }
     }
 }
@@ -190,19 +195,21 @@ pub struct TextDocumentHover {
     #[serde(flatten)]
     pub edge: Edge,
     pub out_v: u64,
-    pub in_v: u64
+    pub in_v: u64,
 }
 
 impl TextDocumentHover {
     pub fn new(id: u64, out_v: u64, in_v: u64) -> TextDocumentHover {
-        TextDocumentHover{
-            edge: Edge{
-                el: Element{
-                    id, el_type: ElementType::Edge,
+        TextDocumentHover {
+            edge: Edge {
+                el: Element {
+                    id,
+                    el_type: ElementType::Edge,
                 },
                 label: EdgeLabel::TextDocHover,
             },
-            out_v, in_v,
+            out_v,
+            in_v,
         }
     }
 }
@@ -214,7 +221,7 @@ pub struct Item {
     pub out_v: u64,
     pub in_vs: Vec<u64>,
     pub document: u64,
-    pub property: String
+    pub property: String,
 }
 
 impl Item {
@@ -222,15 +229,25 @@ impl Item {
         Item::new_with_property(id, out_v, in_vs, document, "")
     }
 
-    pub fn new_with_property<T: Into<String>>(id: u64, out_v: u64, in_vs: Vec<u64>, document: u64, property: T) -> Item {
-        Item{
-            edge: Edge{
-                el: Element{ 
-                    id, el_type: ElementType::Edge
+    pub fn new_with_property<T: Into<String>>(
+        id: u64,
+        out_v: u64,
+        in_vs: Vec<u64>,
+        document: u64,
+        property: T,
+    ) -> Item {
+        Item {
+            edge: Edge {
+                el: Element {
+                    id,
+                    el_type: ElementType::Edge,
                 },
                 label: EdgeLabel::Item,
             },
-            out_v, in_vs, document, property: property.into()
+            out_v,
+            in_vs,
+            document,
+            property: property.into(),
         }
     }
 
@@ -253,22 +270,23 @@ pub struct MetaData {
     pub version: &'static str,
     pub project_root: String,
     pub position_encoding: &'static str,
-    pub tool_info: ToolInfo
+    pub tool_info: ToolInfo,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct ToolInfo {
     pub name: String,
     pub version: &'static str,
-    pub args: Vec<String>
+    pub args: Vec<String>,
 }
 
 impl MetaData {
     pub fn new(id: u64, root: String, info: ToolInfo) -> MetaData {
-        MetaData{
-            vertex: Vertex{
-                el: Element{
-                    id, el_type: ElementType::Vertex,
+        MetaData {
+            vertex: Vertex {
+                el: Element {
+                    id,
+                    el_type: ElementType::Vertex,
                 },
                 label: VertexLabel::Metadata,
             },
@@ -286,20 +304,21 @@ pub struct Moniker {
     pub vertex: Vertex,
     pub kind: String,
     pub scheme: String,
-    pub identifier: String
+    pub identifier: String,
 }
 
 impl Moniker {
     pub fn new<T: Into<String>>(id: u64, kind: T, scheme: T, identifier: T) -> Moniker {
-        Moniker{
-            vertex: Vertex{
-                el: Element{
-                    id, el_type: ElementType::Vertex,
+        Moniker {
+            vertex: Vertex {
+                el: Element {
+                    id,
+                    el_type: ElementType::Vertex,
                 },
                 label: VertexLabel::Moniker,
             },
             kind: kind.into(),
-            scheme: scheme.into(), 
+            scheme: scheme.into(),
             identifier: identifier.into(),
         }
     }
@@ -309,20 +328,22 @@ impl Moniker {
 pub struct MonikerEdge {
     #[serde(flatten)]
     pub edge: Edge,
-    pub out_v: u64, 
-    pub in_v: u64
+    pub out_v: u64,
+    pub in_v: u64,
 }
 
 impl MonikerEdge {
     pub fn new(id: u64, out_v: u64, in_v: u64) -> MonikerEdge {
-        MonikerEdge{
-            edge: Edge{
-                el: Element{
-                    id, el_type: ElementType::Edge
+        MonikerEdge {
+            edge: Edge {
+                el: Element {
+                    id,
+                    el_type: ElementType::Edge,
                 },
                 label: EdgeLabel::Moniker,
             },
-            out_v, in_v,
+            out_v,
+            in_v,
         }
     }
 }
@@ -332,19 +353,21 @@ pub struct NextMonikerEdge {
     #[serde(flatten)]
     pub edge: Edge,
     pub out_v: u64,
-    pub in_v: u64
+    pub in_v: u64,
 }
 
 impl NextMonikerEdge {
     pub fn new(id: u64, out_v: u64, in_v: u64) -> NextMonikerEdge {
-        NextMonikerEdge{
-            edge: Edge{
-                el: Element{
-                    id, el_type: ElementType::Edge,
+        NextMonikerEdge {
+            edge: Edge {
+                el: Element {
+                    id,
+                    el_type: ElementType::Edge,
                 },
                 label: EdgeLabel::NextMoniker,
             },
-            out_v, in_v,
+            out_v,
+            in_v,
         }
     }
 }
@@ -353,20 +376,22 @@ impl NextMonikerEdge {
 pub struct Next {
     #[serde(flatten)]
     pub edge: Edge,
-    pub out_v: u64, 
-    pub in_v: u64
+    pub out_v: u64,
+    pub in_v: u64,
 }
 
 impl Next {
     pub fn new(id: u64, out_v: u64, in_v: u64) -> Next {
-        Next{
-            edge: Edge{
-                el: Element{
-                    id, el_type: ElementType::Edge,
+        Next {
+            edge: Edge {
+                el: Element {
+                    id,
+                    el_type: ElementType::Edge,
                 },
                 label: EdgeLabel::Next,
             },
-            out_v, in_v,
+            out_v,
+            in_v,
         }
     }
 }
@@ -382,10 +407,11 @@ pub struct PackageInfo {
 
 impl PackageInfo {
     pub fn new<T: Into<String>>(id: u64, name: T, manager: T, version: T) -> PackageInfo {
-        PackageInfo{
-            vertex: Vertex{
-                el: Element{
-                    id, el_type: ElementType::Vertex,
+        PackageInfo {
+            vertex: Vertex {
+                el: Element {
+                    id,
+                    el_type: ElementType::Vertex,
                 },
                 label: VertexLabel::PackageInfo,
             },
@@ -401,19 +427,21 @@ pub struct PackageInfoEdge {
     #[serde(flatten)]
     pub edge: Edge,
     pub out_v: u64,
-    pub in_v: u64
+    pub in_v: u64,
 }
 
 impl PackageInfoEdge {
     pub fn new(id: u64, out_v: u64, in_v: u64) -> PackageInfoEdge {
-        PackageInfoEdge{
-            edge: Edge{
-                el: Element{
-                    id, el_type: ElementType::Edge,
+        PackageInfoEdge {
+            edge: Edge {
+                el: Element {
+                    id,
+                    el_type: ElementType::Edge,
                 },
                 label: EdgeLabel::PackageInfo,
             },
-            out_v, in_v,
+            out_v,
+            in_v,
         }
     }
 }
@@ -422,15 +450,16 @@ impl PackageInfoEdge {
 pub struct Project {
     #[serde(flatten)]
     pub vertex: Vertex,
-    pub kind: String
+    pub kind: String,
 }
 
 impl Project {
     pub fn new<T: Into<String>>(id: u64, language_id: T) -> Project {
-        Project{
-            vertex: Vertex{
-                el: Element{
-                    id, el_type: ElementType::Vertex
+        Project {
+            vertex: Vertex {
+                el: Element {
+                    id,
+                    el_type: ElementType::Vertex,
                 },
                 label: VertexLabel::Project,
             },
@@ -444,19 +473,21 @@ pub struct Range {
     #[serde(flatten)]
     pub vertex: Vertex,
     pub start: Position,
-    pub end: Position
+    pub end: Position,
 }
 
 impl Range {
     pub fn new(id: u64, start: Position, end: Position) -> Range {
-        Range{
-            vertex: Vertex{
-                el: Element{
-                    id, el_type: ElementType::Vertex,
+        Range {
+            vertex: Vertex {
+                el: Element {
+                    id,
+                    el_type: ElementType::Vertex,
                 },
                 label: VertexLabel::Range,
             },
-            start, end,
+            start,
+            end,
         }
     }
 }
@@ -464,29 +495,31 @@ impl Range {
 #[derive(Serialize, Deserialize)]
 pub struct ResultSet {
     #[serde(flatten)]
-    pub vertex: Vertex
+    pub vertex: Vertex,
 }
 
 impl ResultSet {
     pub fn new(id: u64) -> ResultSet {
-        ResultSet{
-            vertex: Vertex{
-                el: Element{
-                    id, el_type: ElementType::Vertex
+        ResultSet {
+            vertex: Vertex {
+                el: Element {
+                    id,
+                    el_type: ElementType::Vertex,
                 },
                 label: VertexLabel::ResultSet,
-            }
+            },
         }
     }
 
     pub fn new_reference_result(id: u64) -> ResultSet {
-        ResultSet{
-            vertex: Vertex{
-                el: Element{
-                    id, el_type: ElementType::Vertex,
+        ResultSet {
+            vertex: Vertex {
+                el: Element {
+                    id,
+                    el_type: ElementType::Vertex,
                 },
                 label: VertexLabel::ReferenceResult,
-            }
+            },
         }
     }
 }
@@ -496,19 +529,21 @@ pub struct TextDocumentReferences {
     #[serde(flatten)]
     pub edge: Edge,
     pub out_v: u64,
-    pub in_v: u64
+    pub in_v: u64,
 }
 
 impl TextDocumentReferences {
     pub fn new(id: u64, out_v: u64, in_v: u64) -> TextDocumentReferences {
-        TextDocumentReferences{
-            edge: Edge{
-                el: Element{
-                    id, el_type: ElementType::Edge
+        TextDocumentReferences {
+            edge: Edge {
+                el: Element {
+                    id,
+                    el_type: ElementType::Edge,
                 },
                 label: EdgeLabel::TextDocReferences,
             },
-            out_v, in_v,
+            out_v,
+            in_v,
         }
     }
 }
