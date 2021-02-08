@@ -50,9 +50,15 @@ fn read_lines(interner: Interner, mut r: Box<dyn BufRead + Send>, element_sender
                 let mut line = Vec::new();
                 match r.read_until(b'\n', &mut line) {
                     Ok(_) => {
+                        if line.is_empty() {
+                            println!("done reading");
+                            *reader_done.write().unwrap() = true;
+                            return;
+                        }
                         line_send.send((idx, line)).unwrap();
                     }
                     Err(_) => {
+                        println!("done reading");
                         *reader_done.write().unwrap() = true;
                         return;
                     }
@@ -66,8 +72,8 @@ fn read_lines(interner: Interner, mut r: Box<dyn BufRead + Send>, element_sender
         let worker_done = worker_done.clone();
         let signal = signal.clone();
         std::thread::spawn(move || {
+            let (lock, sigvar) = &*signal;
             while !*reader_done.read().unwrap() {
-                let (lock, sigvar) = &*signal;
                 let mut ready = lock.lock().unwrap();
 
                 pool.scope(|s| {
@@ -83,7 +89,7 @@ fn read_lines(interner: Interner, mut r: Box<dyn BufRead + Send>, element_sender
                             };
         
                             let element = deserialize_element(&interner, &line);
-        
+                            println!("sending a result");
                             results_send.send((idx, element)).unwrap();
                         });
                     }
@@ -99,6 +105,7 @@ fn read_lines(interner: Interner, mut r: Box<dyn BufRead + Send>, element_sender
                     ready = sigvar.wait(ready).unwrap();
                 }
             }
+            println!("worker done");
             *worker_done.write().unwrap() = true;
         });
     }
@@ -107,9 +114,9 @@ fn read_lines(interner: Interner, mut r: Box<dyn BufRead + Send>, element_sender
         std::thread::spawn(move || {
             let mut elements = Vec::<Result<Element>>::with_capacity(*WORKER_COUNT);
 
+            let (lock, sigvar) = &*signal;
             while !*worker_done.read().unwrap() {
                 // wait for signal from worker manager
-                let (lock, sigvar) = &*signal;
                 let mut ready = lock.lock().unwrap();
                 while !*ready {
                     ready = sigvar.wait(ready).unwrap();
@@ -121,6 +128,7 @@ fn read_lines(interner: Interner, mut r: Box<dyn BufRead + Send>, element_sender
                         Err(_) => return
                     };
 
+                    println!("got a result");
                     elements[el.0 as usize] = el.1;
                 }
 
@@ -138,5 +146,35 @@ fn read_lines(interner: Interner, mut r: Box<dyn BufRead + Send>, element_sender
                 sigvar.notify_one();
             }
         });
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::read_async;
+
+    #[test]
+    fn basic() {
+        let string = r#"{ id: 2, type: "vertex", label: "project", kind: "typescript" }
+{ id: 4, type: "vertex", label: "document", uri: "file:///home/burger/sample.ts", languageId: "typescript", contents: "..." }
+{ id: 5, type: "vertex", label: "$event", kind: "begin", scope: "document" , data: 4 }
+{ id: 3, type: "vertex", label: "$event", kind: "begin", scope: "project", data: 2 }
+{ id: 53, type: "vertex", label: "$event", kind: "end", scope: "document", data: 4 }
+{ id: 54, type: "edge", label: "contains", outV: 2, inVs: [4] }
+{ id: 55, type: "vertex", label: "$event", kind: "end", scope: "project", data: 2 }"#;
+
+        let chan = read_async(Box::new(string.as_bytes()));
+
+        let mut count = 0;
+        for _ in 0..7 {
+            match chan.recv() {
+                Ok(_) => println!("got an el"),
+                Err(_) => break,
+            };
+            count += 1;
+        }
+
+        assert_eq!(count, 7);
+
     }
 }
