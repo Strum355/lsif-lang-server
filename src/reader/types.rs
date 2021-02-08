@@ -72,10 +72,10 @@ pub struct MetaData {
 
 #[derive(Clone)]
 pub struct Range {
-    pub start_line: u64,
-    pub start_character: u64,
-    pub end_line: u64,
-    pub end_character: u64
+    pub start_line: u32,
+    pub start_character: u32,
+    pub end_line: u32,
+    pub end_character: u32
 }
 
 #[derive(Clone)]

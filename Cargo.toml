@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 serde_json =  { version = "1.0.59", features = ["raw_value"] }
 serde = "1.0.117"
-lsp-types = "0.83.0"
+lsp-types = "0.86.0"
 anyhow = "1.0.33"
 lazy_static = "1.4.0"
 num_cpus = "1.13.0"
