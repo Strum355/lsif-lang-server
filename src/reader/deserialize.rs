@@ -171,7 +171,7 @@ fn deserialize_range(line: &[u8]) -> Result<Payload> {
     }))
 }
 
-fn deserialize_hover(line: &[u8]) -> Result<Payload> {
+fn deserialize_hover(_line: &[u8]) -> Result<Payload> {
     Err(anyhow::anyhow!("asd").into())
 }
 
@@ -218,7 +218,7 @@ fn deserialize_diagnostics(line: &[u8]) -> Result<Payload> {
         version: String,
     }
 
-    let payload: DiagnosticPayload = serde_json::from_slice(line)?;
+    let _payload: DiagnosticPayload = serde_json::from_slice(line)?;
 
     Ok(Payload::Diagnostics(Vec::new()))
 }
